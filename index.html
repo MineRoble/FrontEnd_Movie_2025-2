@@ -42,11 +42,7 @@
             font-size: 16px;
             line-height: 24px;
             letter-spacing: 0%;
-        }
-        
-        header > #search > #btnSearch > img {
-            width: 24px;
-            height: 24px;
+
         }
 
         main {
@@ -114,14 +110,76 @@
             line-height: 28px;
             letter-spacing: 0%;
         }
+
+        #modal {
+            background-color: rgba(0, 0, 0, 0.6);
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #modal > div {
+            width: 1000px;
+            height: 720px;
+            background-color: #212122;
+            border-radius: 16px;
+        }
+
+        #modal > div > h4 {
+            color: #fff;
+            font-size: 24px;
+            text-align: center;
+            padding: 18px 0;
+            font-weight: 600;
+            border-bottom: 1px solid #F1F1F140;
+        }
+        
+        #modal > div > button {
+            float: right;
+            margin-top: -56px;
+            margin-right: 20px;
+            background-color: #383839;
+            padding: 12px 13px;
+            border-radius: 50%;
+        }
+
+        #modal > div > div {
+            padding: 50px 40px;
+            display: flex;
+            gap: 40px;
+        }
+
+        #modal > div > div > img {
+            max-height: 540px;
+        }
+
+        #modal > div > div > div {
+            color: #fff;
+            font-size: 20px;
+        }
+
+        #modal > div > div > div > div {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 32px;
+        }
+
+        #modal > div > div > div > div > div {
+            margin-right: 16px;
+        }
     </style>
 </head>
 <body>
     <header>
-        <a href="./"><img src="/src/assets/logo.png" alt="Movielist"></a>
+        <a href="./"><img src="logo.png" alt="Movielist"></a>
         <form id="search">
             <input type="text" name="query" id="searchQuery" placeholder="검색">
-            <button id="btnSearch" role="submit"><img src="/src/assets/search_button.png" alt="검색"></button>
+            <button id="btnSearch" role="submit"><img src="search.png" alt="검색"></button>
         </form>
     </header>
     <main>
@@ -129,6 +187,20 @@
         <div id="movies"></div>
         <button id="btnMore">더보기</button>
     </main>
+
+    <div id="modal" style="display: none;">
+        <div>
+            <h4 id="modalTitle"></h4>
+            <button id="btnCloseModal"><img src="./buttonX.png" alt="Close"></button>
+            <div>
+                <img src="" alt="Poster" id="modalPoster">
+                <div>
+                    <div><div id="modalGenres"></div> <img src="./star.png" alt="Star"> 10.0</div>
+                    <div id="modalOverview"></div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <script>
         var lastFetch;
@@ -153,28 +225,7 @@
                 
                 for(let i = 0; i<data.results.length; i++) {
                     const item = data.results[i];
-
-                    const div = document.createElement("div");
-                    div.classList.add("movie");
-
-                    const img = document.createElement("img");
-                    img.src = "https://image.tmdb.org/t/p/w500"+item["poster_path"];
-                    img.alt = "Poster";
-
-                    const p = document.createElement("p");
-                    p.textContent = item["original_title"];
-
-                    const divStar = document.createElement("div");
-                    divStar.textContent = item["vote_average"];
-
-                    const imgStar = document.createElement("img");
-                    imgStar.src = "/src/assets/star.svg";
-
-                    divStar.append(imgStar);
-                    div.append(img);
-                    div.append(p);
-                    div.append(divStar);
-                    document.getElementById("movies").append(div);
+                    document.getElementById("movies").append(createMovieElement(item));
                 }
 
                 lastFetch = getPopular;
@@ -205,28 +256,7 @@
                 
                 for(let i = 0; i<data.results.length; i++) {
                     const item = data.results[i];
-
-                    const div = document.createElement("div");
-                    div.classList.add("movie");
-
-                    const img = document.createElement("img");
-                    img.src = "https://image.tmdb.org/t/p/w500"+item["poster_path"];
-                    img.alt = "Poster";
-
-                    const p = document.createElement("p");
-                    p.textContent = item["original_title"];
-
-                    const divStar = document.createElement("div");
-                    divStar.textContent = item["vote_average"];
-
-                    const imgStar = document.createElement("img");
-                    imgStar.src = "/src/assets/star.svg";
-
-                    divStar.append(imgStar);
-                    div.append(img);
-                    div.append(p);
-                    div.append(divStar);
-                    document.getElementById("movies").append(div);
+                    document.getElementById("movies").append(createMovieElement(item));
                 }
 
                 lastFetch = searchMovie;
@@ -234,6 +264,62 @@
             } catch (err) {
                 console.error(err);
             }
+        }
+
+        function createMovieElement(item) {
+            const a = document.createElement("a");
+            a.href = "#";
+            a.classList.add("movie");
+            a.dataset.movieid = item.id;
+
+            a.addEventListener("click", async (e) => {
+                e.preventDefault();
+                try {
+                    const res = await fetch(
+                        `https://api.themoviedb.org/3/movie/${encodeURIComponent(e.currentTarget.dataset.movieid)}?language=ko-KR`,
+                        {
+                            method: 'GET',
+                            headers: {
+                                accept: 'application/json',
+                                Authorization: 'Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiI5YzdjYTliNTI3OTY1MTRmMmMyMDZmYzI4YWM4NDAwMyIsIm5iZiI6MTc2Mjc2OTQ5NS4zNDMwMDAyLCJzdWIiOiI2OTExYmE1NzEyY2E0NzZkNWFkZDIwODQiLCJzY29wZXMiOlsiYXBpX3JlYWQiXSwidmVyc2lvbiI6MX0.xvB91CX2isVAHYtF2YjSGRQuawN1o4JQoZyFX48RFq4'
+                            }
+                        }
+                    );
+                    const data = await res.json();
+
+                    document.getElementById("modalPoster").src = "https://image.tmdb.org/t/p/w500"+data["poster_path"];
+                    document.getElementById("modalOverview").textContent = data["overview"];
+                    document.getElementById("modalTitle").textContent = data["title"];
+
+                    document.getElementById("modalGenres").textContent = data.genres[0]["name"];
+                    for(let i = 1; i < data.genres.length; i++) {
+                        document.getElementById("modalGenres").textContent += ", "+data.genres[i]["name"];
+                    }
+
+                    document.getElementById("modal").style.display = "flex";
+                } catch (err) {
+                    console.error(err);
+                }
+            });
+
+            const img = document.createElement("img");
+            img.src = "https://image.tmdb.org/t/p/w500"+item["poster_path"];
+            img.alt = "Poster";
+
+            const p = document.createElement("p");
+            p.textContent = item["original_title"];
+
+            const divStar = document.createElement("div");
+            divStar.textContent = item["vote_average"];
+
+            const imgStar = document.createElement("img");
+            imgStar.src = "./star.png";
+
+            divStar.append(imgStar);
+            a.append(img);
+            a.append(p);
+            a.append(divStar);
+            return a;
         }
 
         window.addEventListener("load", () => {
@@ -256,6 +342,10 @@
             }
             lastPage = 1;
             searchMovie(document.getElementById("searchQuery").value);
+        });
+
+        document.getElementById("btnCloseModal").addEventListener("click", () => {
+            document.getElementById("modal").style.display = "none";
         });
     </script>
 </body>
